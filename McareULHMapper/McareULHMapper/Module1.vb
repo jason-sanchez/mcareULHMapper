@@ -19,8 +19,9 @@ Imports System.IO
 Imports System.Collections
 Imports System.data.sqlclient
 Module Module1
-    Public objIniFile As New INIFile("c:\newfeeds\HL7Mapper.ini") '20151222
-    'Public objIniFile As New INIFile("C:\KY2 Test Environment\HL7Mapper.ini") '20151222
+    'Public objIniFile As New INIFile("c:\newfeeds\HL7Mapper.ini") '20151222 - Prod
+    'Public objIniFile As New INIFile("c:\ULHTest\ULHMapper.ini") '20151222 - Test
+    Public objIniFile As New INIFile("C:\KY2 Test Environment\HL7Mapper.ini") '20151222 - Local
     Dim strInputDirectory As String = ""
     Dim strOutputDirectory As String = ""
     Dim strOutputSubDirectory As String = ""
@@ -62,6 +63,9 @@ Module Module1
             Dim PIDCounter As Integer = 0
             Dim PV1Counter As Integer = 0
             Dim AL1Counter As Integer = 0
+            '20170615 - for additional authcodes
+            Dim ZGICounter As Integer = 0
+
             Dim ZMICounter As Integer = 0
             '20130508 - add DG1 for multiple segments
             Dim DG1Counter As Integer = 0
@@ -96,6 +100,8 @@ Module Module1
                 ZMICounter = 0
                 '20130508 - add DG1 for multiple segments
                 DG1Counter = 0
+                '20170615
+                ZGICounter = 0
 
                 MSHCounter = 0
                 NK1Counter = 0
@@ -210,6 +216,14 @@ Module Module1
                         End If
                     End If
 
+                    '20170605
+                    If segId = "ZGI" Then
+                        ZGICounter = ZGICounter + 1
+                        If ZGICounter = 1 Then
+                            ZGICounter = +1
+                        End If
+                    End If
+
                     '20130521 - added multiple MSH and NK1 counters
                     If segId = "MSH" Then
                         MSHCounter = MSHCounter + 1
@@ -274,6 +288,10 @@ Module Module1
 
                                 ElseIf segId = "AL1" Then
                                     strLTWOutput = strLTWOutput & segname & BuildSegCounter(AL1Counter) & "="
+
+                                    '20170615
+                                ElseIf segId = "ZGI" Then
+                                    strLTWOutput = strLTWOutput & segname & BuildSegCounter(ZGICounter) & "="
 
                                 ElseIf segId = "ROL" Then
                                     'LogFile.Write(segname & "_" & OBXCounter & "=")
@@ -361,6 +379,10 @@ Module Module1
 
                                         ElseIf segId = "AL1" Then
                                             strLTWOutput = strLTWOutput & segname & BuildSegCounter(AL1Counter) & "="
+
+                                            '20170615
+                                        ElseIf segId = "ZGI" Then
+                                            strLTWOutput = strLTWOutput & segname & BuildSegCounter(ZGICounter) & "="
 
                                         ElseIf segId = "ROL" Then
                                             'LogFile.Write(segname & "_" & OBXCounter & "=")
