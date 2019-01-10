@@ -19,10 +19,9 @@ Imports System.IO
 Imports System.Collections
 Imports System.data.sqlclient
 Module Module1
-    'Private fullinipath As String = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory, "..\..\..\Configs\ULH\HL7Mapper.ini")) ' New test
-    Private fullinipath As String = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory, "..\..\..\..\..\..\..\..\..\Configs\ULH\HL7Mapper.ini")) ' New test
-    Public objIniFile As New INIFile(fullinipath) '20140817 - New Test
-    'Public objIniFile As New INIFile("C:\KY2 Test Environment\HL7Mapper.ini") '20151222
+    Public objIniFile As New INIFile("c:\newfeeds\HL7Mapper.ini") '20151222 - Prod
+    'Public objIniFile As New INIFile("c:\ULHTest\ULHMapper.ini") '20151222 - Test
+    'Public objIniFile As New INIFile("C:\KY2 Test Environment\HL7Mapper.ini") '20151222 - Local
     Dim strInputDirectory As String = ""
     Dim strOutputDirectory As String = ""
     Dim strOutputSubDirectory As String = ""
@@ -44,14 +43,10 @@ Module Module1
             Dim s1 As String
 
             Dim dir As String
-
-            Dim direct As String = objIniFile.GetString("Settings", "directory", "(none)") & ":\"
-            Dim parent As String = objIniFile.GetString("Settings", "parentDir", "(none)") & "\"
-
-            strInputDirectory = direct & parent & objIniFile.GetString("ULH_MCARE", "ULH_MCAREinputDir", "(none)") '20151222
-            strOutputDirectory = direct & parent & objIniFile.GetString("ULH_MCARE", "ULH_MCAREoutputdirectory", "(none)") '20151222
-            strMapperFile = direct & parent & objIniFile.GetString("ULH_MCARE", "ULH_MCAREmapper", "(none)") '20151222
-            strLogDirectory = direct & parent & objIniFile.GetString("Settings", "logs", "(none)")
+            strInputDirectory = objIniFile.GetString("ULH_MCARE", "ULH_MCAREinputDir", "(none)") '20151222
+            strOutputDirectory = objIniFile.GetString("ULH_MCARE", "ULH_MCAREoutputdirectory", "(none)") '20151222
+            strMapperFile = objIniFile.GetString("ULH_MCARE", "ULH_MCAREmapper", "(none)") '20151222
+            strLogDirectory = objIniFile.GetString("Settings", "logs", "(none)")
 
             'Dim LogFile As StreamWriter = File.AppendText(strLogFile & "McareMapperLog.txt")
 
@@ -68,6 +63,9 @@ Module Module1
             Dim PIDCounter As Integer = 0
             Dim PV1Counter As Integer = 0
             Dim AL1Counter As Integer = 0
+            '20170615 - for additional authcodes
+            Dim ZGICounter As Integer = 0
+
             Dim ZMICounter As Integer = 0
             '20130508 - add DG1 for multiple segments
             Dim DG1Counter As Integer = 0
@@ -102,6 +100,8 @@ Module Module1
                 ZMICounter = 0
                 '20130508 - add DG1 for multiple segments
                 DG1Counter = 0
+                '20170615
+                ZGICounter = 0
 
                 MSHCounter = 0
                 NK1Counter = 0
@@ -123,12 +123,15 @@ Module Module1
                     Dim TestPos As Integer = 0
                     strLine = myfile.ReadLine()
                     Dim segId As String = ""
+                    Dim segId2 As String = ""
                     Dim segIDFull As String = ""
                     Dim counter As Integer = 0
 
                     Dim segname As String = ""
                     'get the segment Id which is the first three Characters of the string
                     segId = Mid(strLine, 1, 3)
+                    '20171018 added to handle instances where a ZGI segment is skipped
+                    segId2 = Mid(strLine, 5, 1)
 
                     If segId = "MSH" Then
                         boolMSHExists = True '20140325
@@ -216,6 +219,18 @@ Module Module1
                         End If
                     End If
 
+                    '20170605
+                    If segId = "ZGI" Then
+                        ZGICounter = ZGICounter + 1
+                        If ZGICounter = 1 Then
+                            ZGICounter = +1
+                        End If
+                        '20171018 added to handle instances where a ZGI segment is skipped
+                        If CInt(segId2) > ZGICounter Then
+                            ZGICounter = CInt(segId2)
+                        End If
+                    End If
+
                     '20130521 - added multiple MSH and NK1 counters
                     If segId = "MSH" Then
                         MSHCounter = MSHCounter + 1
@@ -280,6 +295,10 @@ Module Module1
 
                                 ElseIf segId = "AL1" Then
                                     strLTWOutput = strLTWOutput & segname & BuildSegCounter(AL1Counter) & "="
+
+                                    '20170615
+                                ElseIf segId = "ZGI" Then
+                                    strLTWOutput = strLTWOutput & segname & BuildSegCounter(ZGICounter) & "="
 
                                 ElseIf segId = "ROL" Then
                                     'LogFile.Write(segname & "_" & OBXCounter & "=")
@@ -367,6 +386,10 @@ Module Module1
 
                                         ElseIf segId = "AL1" Then
                                             strLTWOutput = strLTWOutput & segname & BuildSegCounter(AL1Counter) & "="
+
+                                            '20170615
+                                        ElseIf segId = "ZGI" Then
+                                            strLTWOutput = strLTWOutput & segname & BuildSegCounter(ZGICounter) & "="
 
                                         ElseIf segId = "ROL" Then
                                             'LogFile.Write(segname & "_" & OBXCounter & "=")
