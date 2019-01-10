@@ -19,9 +19,9 @@ Imports System.IO
 Imports System.Collections
 Imports System.data.sqlclient
 Module Module1
-    'Public objIniFile As New INIFile("c:\newfeeds\HL7Mapper.ini") '20151222 - Prod
+    Public objIniFile As New INIFile("c:\newfeeds\HL7Mapper.ini") '20151222 - Prod
     'Public objIniFile As New INIFile("c:\ULHTest\ULHMapper.ini") '20151222 - Test
-    Public objIniFile As New INIFile("C:\KY2 Test Environment\HL7Mapper.ini") '20151222 - Local
+    'Public objIniFile As New INIFile("C:\KY2 Test Environment\HL7Mapper.ini") '20151222 - Local
     Dim strInputDirectory As String = ""
     Dim strOutputDirectory As String = ""
     Dim strOutputSubDirectory As String = ""
@@ -123,12 +123,15 @@ Module Module1
                     Dim TestPos As Integer = 0
                     strLine = myfile.ReadLine()
                     Dim segId As String = ""
+                    Dim segId2 As String = ""
                     Dim segIDFull As String = ""
                     Dim counter As Integer = 0
 
                     Dim segname As String = ""
                     'get the segment Id which is the first three Characters of the string
                     segId = Mid(strLine, 1, 3)
+                    '20171018 added to handle instances where a ZGI segment is skipped
+                    segId2 = Mid(strLine, 5, 1)
 
                     If segId = "MSH" Then
                         boolMSHExists = True '20140325
@@ -221,6 +224,10 @@ Module Module1
                         ZGICounter = ZGICounter + 1
                         If ZGICounter = 1 Then
                             ZGICounter = +1
+                        End If
+                        '20171018 added to handle instances where a ZGI segment is skipped
+                        If CInt(segId2) > ZGICounter Then
+                            ZGICounter = CInt(segId2)
                         End If
                     End If
 
